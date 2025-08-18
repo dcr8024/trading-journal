@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Add Trade - Trading Journal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h3 class="mb-0 fw-bold">
+                    <i class="fas fa-plus-circle me-2"></i>Add New Trade
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="ticker" class="form-label">
+                                <i class="fas fa-tag me-2"></i>Ticker *
+                            </label>
+                            <input type="text" class="form-control" id="ticker" name="ticker" required 
+                                   placeholder="e.g., AAPL" style="text-transform: uppercase;">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="direction" class="form-label">
+                                <i class="fas fa-arrow-trend-up me-2"></i>Direction *
+                            </label>
+                            <select class="form-select" id="direction" name="direction" required>
+                                <option value="">Select Direction</option>
+                                <option value="Long">📈 Long</option>
+                                <option value="Short">📉 Short</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-6">
+                            <label for="date" class="form-label">
+                                <i class="fas fa-calendar me-2"></i>Trade Date *
+                            </label>
+                            <input type="date" class="form-control" id="date" name="date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="outcome" class="form-label">
+                                <i class="fas fa-trophy me-2"></i>Outcome *
+                            </label>
+                            <select class="form-select" id="outcome" name="outcome" required>
+                                <option value="">Select Outcome</option>
+                                <option value="Win">🏆 Win</option>
+                                <option value="Loss">❌ Loss</option>
+                                <option value="Breakeven">⚖️ Breakeven</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-6">
+                            <label for="close_reason" class="form-label">
+                                <i class="fas fa-door-open me-2"></i>Reason for Closing *
+                            </label>
+                            <select class="form-select" id="close_reason" name="close_reason" required>
+                                <option value="">Select Reason</option>
+                                <option value="TP">🎯 Take Profit (TP)</option>
+                                <option value="No Momentum">⏸️ No Momentum</option>
+                                <option value="Earnings Fail">📉 Earnings Fail</option>
+                                <option value="Stop Loss">🛑 Stop Loss</option>
+                                <option value="Other">🔄 Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="account_pnl" class="form-label">
+                                <i class="fas fa-percentage me-2"></i>Account P&L (%) *
+                            </label>
+                            <input type="number" step="0.01" class="form-control" id="account_pnl" name="account_pnl" required 
+                                   placeholder="e.g., 1.5 or -0.4">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="screenshot" class="form-label">
+                            <i class="fas fa-camera me-2"></i>Chart Screenshot
+                        </label>
+                        <div class="file-upload-area">
+                            <input type="file" class="form-control" id="screenshot" name="screenshot" 
+                                   accept="image/*" style="display: none;">
+                            <div onclick="document.getElementById('screenshot').click()">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                <p class="file-upload-text mb-2 fw-medium">Click to upload or drag & drop chart screenshot</p>
+                                <small class="text-muted">PNG, JPG, JPEG, GIF, WebP (Max 16MB)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="notes" class="form-label">
+                            <i class="fas fa-sticky-note me-2"></i>Notes
+                        </label>
+                        <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                  placeholder="Optional notes about the trade setup, execution, lessons learned, etc."></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-5">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>Save Trade
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set today's date as default
+    document.getElementById('date').valueAsDate = new Date();
+</script>
+{% endblock %}

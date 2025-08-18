@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Trading Journal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #1a1a1d;
+            --bg-tertiary: #2d2d30;
+            --bg-card: #1e1e21;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --text-muted: #6c757d;
+            --accent-primary: #00d4aa;
+            --accent-secondary: #6c5ce7;
+            --border-color: #404040;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-title {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            padding: 0.875rem 1rem;
+            font-weight: 500;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 0.2rem rgba(0, 212, 170, 0.25);
+            color: var(--text-primary);
+        }
+
+        .form-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 0.875rem 2rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 212, 170, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .profile-card {
+            background: var(--glass-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile-card:hover {
+            border-color: var(--accent-primary);
+            background: rgba(0, 212, 170, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .profile-card.selected {
+            border-color: var(--accent-primary);
+            background: rgba(0, 212, 170, 0.15);
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .alert {
+            border: none;
+            border-radius: 12px;
+            border-left: 4px solid;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-success {
+            background: rgba(0, 184, 148, 0.1);
+            border-left-color: #00b894;
+            color: #00b894;
+        }
+
+        .alert-danger {
+            background: rgba(225, 112, 85, 0.1);
+            border-left-color: #e17055;
+            color: #e17055;
+        }
+
+        .login-form {
+            display: none;
+            margin-top: 1.5rem;
+        }
+
+        .login-form.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1 class="login-title">
+                <i class="fas fa-chart-line me-2"></i>Trading Journal
+            </h1>
+            <p class="text-muted">Select your profile to continue</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Profile Selection -->
+        <div class="profile-grid">
+            <div class="profile-card" onclick="selectProfile('darren', 'Darren')">
+                <div class="profile-avatar">D</div>
+                <div class="fw-medium">Darren</div>
+            </div>
+            <div class="profile-card" onclick="selectProfile('likith', 'Likith')">
+                <div class="profile-avatar">L</div>
+                <div class="fw-medium">Likith</div>
+            </div>
+            <div class="profile-card" onclick="selectProfile('tanish', 'Tanish')">
+                <div class="profile-avatar">T</div>
+                <div class="fw-medium">Tanish</div>
+            </div>
+        </div>
+
+        <!-- Login Form (appears after profile selection) -->
+        <form method="POST" id="loginForm" class="login-form">
+            <input type="hidden" id="username" name="username" required>
+            
+            <div class="mb-3">
+                <label for="password" class="form-label">
+                    <i class="fas fa-lock me-2"></i>Password for <span id="selectedUser"></span>
+                </label>
+                <input type="password" class="form-control" id="password" name="password" required 
+                       placeholder="Enter your password">
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt me-2"></i>Login
+            </button>
+        </form>
+
+        <div class="text-center mt-3">
+            <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                Each user has their own password
+            </small>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedProfile = null;
+
+        function selectProfile(username, displayName) {
+            // Remove previous selection
+            document.querySelectorAll('.profile-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Select current profile
+            event.currentTarget.classList.add('selected');
+            selectedProfile = username;
+            
+            // Update form fields
+            document.getElementById('username').value = username;
+            document.getElementById('selectedUser').textContent = displayName;
+            
+            // Show login form
+            const loginForm = document.getElementById('loginForm');
+            loginForm.classList.add('show');
+            
+            // Focus on password field
+            setTimeout(() => {
+                document.getElementById('password').focus();
+            }, 100);
+        }
+
+        // Allow Enter key to submit form when password field is focused
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').submit();
+            }
+        });
+    </script>
+</body>
+</html>
