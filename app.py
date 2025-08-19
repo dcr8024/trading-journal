@@ -542,6 +542,6 @@ if __name__ == '__main__':
     init_db()
     print(f"Starting Trading Journal App...")
     print(f"Upload folder: {UPLOAD_FOLDER}")
-    # For Railway deployment, use PORT from environment
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=False, host='0.0.0.0', port=port, 
+            ssl_context=('cert.pem', 'key.pem'))
