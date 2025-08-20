@@ -1,0 +1,583 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="fw-bold text-primary mb-0">
+                <i class="fas fa-calendar-alt me-2"></i>Economic Calendar
+            </h2>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('add_event') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Event
+                </a>
+                <a href="#" class="btn btn-outline-primary" onclick="updateCalendar()">
+                    <i class="fas fa-sync-alt me-2"></i>Update from Sources
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar Navigation -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('calendar_view', year=prev_year, month=prev_month) }}" 
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-chevron-left me-2"></i>Previous
+                    </a>
+                    
+                    <h3 class="mb-0 fw-bold text-center">
+                        {{ month_name }} {{ current_year }}
+                    </h3>
+                    
+                    <a href="{{ url_for('calendar_view', year=next_year, month=next_month) }}" 
+                       class="btn btn-outline-primary">
+                        Next<i class="fas fa-chevron-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Economic Events Sources -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-link me-2"></i>Official Sources - Update Calendar
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="source-card">
+                            <h6 class="fw-bold text-warning">
+                                <i class="fas fa-university me-2"></i>FOMC Meetings
+                            </h6>
+                            <p class="small text-muted mb-2">Federal Reserve monetary policy decisions</p>
+                            <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" 
+                               target="_blank" class="btn btn-sm btn-outline-warning">
+                                <i class="fas fa-external-link-alt me-1"></i>Visit Source
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="source-card">
+                            <h6 class="fw-bold text-success">
+                                <i class="fas fa-chart-line me-2"></i>NFP Reports
+                            </h6>
+                            <p class="small text-muted mb-2">Non-farm payroll employment data</p>
+                            <a href="https://www.bls.gov/schedule/news_release/empsit.htm" 
+                               target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-external-link-alt me-1"></i>Visit Source
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="source-card">
+                            <h6 class="fw-bold text-info">
+                                <i class="fas fa-oil-well me-2"></i>Petroleum Reports
+                            </h6>
+                            <p class="small text-muted mb-2">Weekly petroleum supply and inventory</p>
+                            <a href="https://www.eia.gov/petroleum/supply/weekly/schedule.php" 
+                               target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-external-link-alt me-1"></i>Visit Source
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="source-card">
+                            <h6 class="fw-bold text-primary">
+                                <i class="fas fa-seedling me-2"></i>WASDE Reports
+                            </h6>
+                            <p class="small text-muted mb-2">World agricultural supply and demand</p>
+                            <a href="https://www.usda.gov/about-usda/general-information/staff-offices/office-chief-economist/commodity-markets/wasde-report" 
+                               target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt me-1"></i>Visit Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar Grid -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="calendar-container">
+                    <!-- Calendar Header -->
+                    <div class="calendar-header">
+                        <div class="row g-0">
+                            <div class="col calendar-day-header">Sunday</div>
+                            <div class="col calendar-day-header">Monday</div>
+                            <div class="col calendar-day-header">Tuesday</div>
+                            <div class="col calendar-day-header">Wednesday</div>
+                            <div class="col calendar-day-header">Thursday</div>
+                            <div class="col calendar-day-header">Friday</div>
+                            <div class="col calendar-day-header">Saturday</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Calendar Body -->
+                    <div class="calendar-body">
+                        {% for week in calendar_data %}
+                        <div class="row g-0 calendar-week">
+                            {% for day in week %}
+                            <div class="col calendar-day 
+                                {% if day == 0 %}other-month{% endif %}
+                                {% if day != 0 and ('%04d-%02d-%02d'|format(current_year, current_month, day)) == today.strftime('%Y-%m-%d') %}today{% endif %}">
+                                
+                                {% if day != 0 %}
+                                    {% set day_date = '%04d-%02d-%02d'|format(current_year, current_month, day) %}
+                                    
+                                    <!-- Day Number -->
+                                    <div class="day-number">
+                                        {{ day }}
+                                        <a href="{{ url_for('add_event', date=day_date) }}" 
+                                           class="btn btn-sm btn-outline-primary float-end add-event-btn"
+                                           title="Add Event">
+                                            <i class="fas fa-plus"></i>
+                                        </a>
+                                    </div>
+                                    
+                                    <!-- Trading P&L for the day -->
+                                    {% if day_date in trades_by_date %}
+                                    <div class="trading-pnl mb-2">
+                                        <div class="small fw-bold {{ 'text-success' if trades_by_date[day_date].pnl > 0 else 'text-danger' if trades_by_date[day_date].pnl < 0 else 'text-muted' }}">
+                                            P&L: {{ "+" if trades_by_date[day_date].pnl > 0 else "" }}{{ trades_by_date[day_date].pnl }}%
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">
+                                            {{ trades_by_date[day_date].count }} trade{{ 's' if trades_by_date[day_date].count != 1 else '' }}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Economic Events -->
+                                    {% if day_date in events_by_date %}
+                                    <div class="events-container">
+                                        {% for event in events_by_date[day_date] %}
+                                        <div class="event-item {{ event.event_type.lower() }} importance-{{ event.importance.lower() }}"
+                                             data-bs-toggle="modal" 
+                                             data-bs-target="#eventModal"
+                                             onclick="showEventDetails({{ event.id }}, '{{ event.title }}', '{{ event.event_type }}', '{{ event.event_date }}', '{{ event.description }}', '{{ event.importance }}', '{{ event.source_url }}')">
+                                            <div class="event-title">{{ event.title }}</div>
+                                            <div class="event-type">{{ event.event_type }}</div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Spacing -->
+<div class="mb-5"></div>
+
+<!-- Event Details Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-check me-2"></i>
+                    <span id="modalEventTitle"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <div class="detail-label">Event Type</div>
+                            <div class="detail-value">
+                                <span id="modalEventType" class="badge"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <div class="detail-label">Date</div>
+                            <div class="detail-value" id="modalEventDate"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <div class="detail-label">Importance</div>
+                            <div class="detail-value">
+                                <span id="modalEventImportance" class="badge"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <div class="detail-label">Official Source</div>
+                            <div class="detail-value">
+                                <a id="modalEventSource" href="#" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-external-link-alt me-1"></i>View Source
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-item">
+                            <div class="detail-label">Description</div>
+                            <div class="detail-value" id="modalEventDescription"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="modalEventId" style="display: none;"></div>
+                <a id="editEventBtn" href="#" class="btn btn-primary">
+                    <i class="fas fa-edit me-1"></i>Edit Event
+                </a>
+                <a id="deleteEventBtn" href="#" class="btn btn-danger" 
+                   onclick="return confirm('Are you sure you want to delete this event?')">
+                    <i class="fas fa-trash me-1"></i>Delete Event
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Calendar Styles */
+.calendar-container {
+    min-height: 600px;
+    margin-bottom: 2rem;
+}
+
+.calendar-header {
+    background: var(--bg-tertiary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.calendar-day-header {
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-right: 1px solid var(--border-color);
+    font-size: 0.875rem;
+}
+
+.calendar-day-header:last-child {
+    border-right: none;
+}
+
+.calendar-week {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.calendar-day {
+    min-height: 120px;
+    padding: 0.5rem;
+    border-right: 1px solid var(--border-color);
+    position: relative;
+    vertical-align: top;
+}
+
+.calendar-day:last-child {
+    border-right: none;
+}
+
+.calendar-day.other-month {
+    background: var(--bg-secondary);
+    opacity: 0.3;
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.1), rgba(108, 92, 231, 0.1));
+    border: 2px solid var(--accent-primary);
+}
+
+.day-number {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.add-event-btn {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+}
+
+.calendar-day:hover .add-event-btn {
+    opacity: 1;
+}
+
+/* Trading P&L Styles */
+.trading-pnl {
+    background: var(--glass-bg);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--border-color);
+}
+
+.trading-pnl .text-success {
+    border-left-color: var(--success) !important;
+}
+
+.trading-pnl .text-danger {
+    border-left-color: var(--danger) !important;
+}
+
+/* Event Styles */
+.events-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.event-item {
+    background: var(--glass-bg);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-left: 3px solid;
+    font-size: 0.75rem;
+}
+
+.event-item:hover {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    transform: translateX(2px);
+}
+
+.event-item.fomc {
+    border-left-color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.event-item.nfp {
+    border-left-color: var(--success);
+    background: rgba(0, 184, 148, 0.1);
+}
+
+.event-item.petroleum {
+    border-left-color: var(--accent-secondary);
+    background: rgba(108, 92, 231, 0.1);
+}
+
+.event-item.wasde {
+    border-left-color: var(--accent-primary);
+    background: rgba(0, 212, 170, 0.1);
+}
+
+.event-item.other {
+    border-left-color: var(--text-muted);
+    background: rgba(108, 117, 125, 0.1);
+}
+
+.event-title {
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.event-type {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Importance levels */
+.importance-high {
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
+}
+
+.importance-medium {
+    box-shadow: 0 0 0 1px rgba(255, 193, 7, 0.3);
+}
+
+.importance-low {
+    opacity: 0.8;
+}
+
+/* Source Cards */
+.source-card {
+    background: var(--glass-bg);
+    border-radius: 12px;
+    padding: 1rem;
+    height: 100%;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.source-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal customizations */
+.detail-item {
+    margin-bottom: 1rem;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.detail-value {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 80px;
+        padding: 0.25rem;
+    }
+    
+    .day-number {
+        font-size: 0.9rem;
+    }
+    
+    .event-item {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.3rem;
+    }
+    
+    .trading-pnl {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.3rem;
+    }
+    
+    .add-event-btn {
+        display: none;
+    }
+}
+</style>
+
+<script>
+function showEventDetails(id, title, type, date, description, importance, sourceUrl) {
+    document.getElementById('modalEventId').textContent = id;
+    document.getElementById('modalEventTitle').textContent = title;
+    document.getElementById('modalEventDate').textContent = new Date(date).toLocaleDateString();
+    document.getElementById('modalEventDescription').textContent = description || 'No description provided';
+    
+    // Set event type badge
+    const typeBadge = document.getElementById('modalEventType');
+    typeBadge.textContent = type;
+    typeBadge.className = `badge bg-${getEventTypeColor(type)}`;
+    
+    // Set importance badge
+    const importanceBadge = document.getElementById('modalEventImportance');
+    importanceBadge.textContent = importance;
+    importanceBadge.className = `badge bg-${getImportanceColor(importance)}`;
+    
+    // Set source URL
+    const sourceLink = document.getElementById('modalEventSource');
+    if (sourceUrl) {
+        sourceLink.href = sourceUrl;
+        sourceLink.style.display = 'inline-block';
+    } else {
+        sourceLink.style.display = 'none';
+    }
+    
+    // Set edit and delete URLs
+    document.getElementById('editEventBtn').href = `/edit_event/${id}`;
+    document.getElementById('deleteEventBtn').href = `/delete_event/${id}`;
+}
+
+function getEventTypeColor(type) {
+    const colors = {
+        'FOMC': 'warning',
+        'NFP': 'success',
+        'Petroleum': 'info',
+        'WASDE': 'primary',
+        'Other': 'secondary'
+    };
+    return colors[type] || 'secondary';
+}
+
+function getImportanceColor(importance) {
+    const colors = {
+        'High': 'danger',
+        'Medium': 'warning',
+        'Low': 'success'
+    };
+    return colors[importance] || 'secondary';
+}
+
+function updateCalendar() {
+    // Show a message about manually updating from sources
+    const modal = new bootstrap.Modal(document.getElementById('updateModal'));
+    modal.show();
+}
+
+// Add click handlers for calendar navigation
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth animations to calendar interactions
+    document.querySelectorAll('.event-item').forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(4px) scale(1.02)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0) scale(1)';
+        });
+    });
+});
+</script>
+
+<!-- Update Sources Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-sync-alt me-2"></i>Update Calendar
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">To keep your economic calendar up to date:</p>
+                <ol>
+                    <li class="mb-2">Visit the official sources using the links above</li>
+                    <li class="mb-2">Check for new dates and updates</li>
+                    <li class="mb-2">Manually add or update events using the "Add Event" button</li>
+                    <li class="mb-2">Set appropriate importance levels for better visibility</li>
+                </ol>
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Pro Tip:</strong> High importance events appear with red borders, medium with yellow, and low importance events are more subtle.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

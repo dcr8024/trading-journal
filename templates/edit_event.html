@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-edit me-2 text-primary"></i>Edit Economic Event
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="eventForm">
+                    <div class="row g-3">
+                        <!-- Event Type -->
+                        <div class="col-md-6">
+                            <label for="event_type" class="form-label">Event Type</label>
+                            <select class="form-select" id="event_type" name="event_type" required>
+                                <option value="">Select Event Type</option>
+                                <option value="FOMC" {{ 'selected' if event.event_type == 'FOMC' }}>FOMC Meeting</option>
+                                <option value="NFP" {{ 'selected' if event.event_type == 'NFP' }}>Non-Farm Payroll (NFP)</option>
+                                <option value="Petroleum" {{ 'selected' if event.event_type == 'Petroleum' }}>Weekly Petroleum Report</option>
+                                <option value="WASDE" {{ 'selected' if event.event_type == 'WASDE' }}>WASDE Report</option>
+                                <option value="Other" {{ 'selected' if event.event_type == 'Other' }}>Other Economic Event</option>
+                            </select>
+                        </div>
+
+                        <!-- Event Date -->
+                        <div class="col-md-6">
+                            <label for="event_date" class="form-label">Event Date</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="event_date" 
+                                   name="event_date" 
+                                   value="{{ event.event_date }}"
+                                   required>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="col-12">
+                            <label for="title" class="form-label">Event Title</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="title" 
+                                   name="title" 
+                                   value="{{ event.title }}"
+                                   placeholder="e.g., FOMC Rate Decision, NFP Release, etc."
+                                   required>
+                        </div>
+
+                        <!-- Importance Level -->
+                        <div class="col-md-6">
+                            <label for="importance" class="form-label">Importance Level</label>
+                            <select class="form-select" id="importance" name="importance" required>
+                                <option value="High" {{ 'selected' if event.importance == 'High' }}>High</option>
+                                <option value="Medium" {{ 'selected' if event.importance == 'Medium' }}>Medium</option>
+                                <option value="Low" {{ 'selected' if event.importance == 'Low' }}>Low</option>
+                            </select>
+                            <div class="form-text">
+                                <small>
+                                    <span class="badge bg-danger me-1">High</span>Major market movers
+                                    <span class="badge bg-warning me-1 ms-2">Medium</span>Moderate impact
+                                    <span class="badge bg-success ms-2">Low</span>Minor impact
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Created Date (Read-only) -->
+                        <div class="col-md-6">
+                            <label class="form-label">Created</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   value="{{ event.created_at }}"
+                                   readonly>
+                            <div class="form-text">
+                                <small>Event creation timestamp</small>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-12">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="3"
+                                      placeholder="Additional details about this event...">{{ event.description or '' }}</textarea>
+                        </div>
+
+                        <!-- Source URL Display -->
+                        <div class="col-12">
+                            <label class="form-label">Official Source</label>
+                            <div id="source_display" class="alert alert-info">
+                                {% if event.source_url %}
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>Official Source:</strong><br>
+                                        <small class="text-muted">{{ event.event_type }} official documentation</small>
+                                    </div>
+                                    <a href="{{ event.source_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt me-1"></i>Visit
+                                    </a>
+                                </div>
+                                {% else %}
+                                <i class="fas fa-info-circle me-2"></i>
+                                Select an event type to see the official source
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('calendar_view') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Calendar
+                        </a>
+                        <div>
+                            <a href="{{ url_for('delete_event', event_id=event.id) }}" 
+                               class="btn btn-outline-danger me-2"
+                               onclick="return confirm('Are you sure you want to delete this event?')">
+                                <i class="fas fa-trash me-2"></i>Delete Event
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Event
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Details Summary -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Event Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="detail-item">
+                            <div class="detail-label">Event ID</div>
+                            <div class="detail-value">#{{ event.id }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-item">
+                            <div class="detail-label">Current Type</div>
+                            <div class="detail-value">
+                                <span class="badge bg-{{ 'warning' if event.event_type == 'FOMC' else 'success' if event.event_type == 'NFP' else 'info' if event.event_type == 'Petroleum' else 'primary' if event.event_type == 'WASDE' else 'secondary' }}">
+                                    {{ event.event_type }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-item">
+                            <div class="detail-label">Current Importance</div>
+                            <div class="detail-value">
+                                <span class="badge bg-{{ 'danger' if event.importance == 'High' else 'warning' if event.importance == 'Medium' else 'success' }}">
+                                    {{ event.importance }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-item">
+                            <div class="detail-label">Event Date</div>
+                            <div class="detail-value">{{ event.event_date }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.detail-item {
+    text-align: center;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.detail-value {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 212, 170, 0.25);
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-1px);
+}
+</style>
+
+<script>
+// Event type change handler
+document.getElementById('event_type').addEventListener('change', function() {
+    updateSourceDisplay(this.value);
+});
+
+// Source URLs mapping
+const sourceUrls = {
+    'FOMC': {
+        url: 'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm',
+        description: 'Federal Reserve FOMC Calendar - Official meeting schedules and rate decisions'
+    },
+    'NFP': {
+        url: 'https://www.bls.gov/schedule/news_release/empsit.htm',
+        description: 'Bureau of Labor Statistics - Employment Situation Release Schedule'
+    },
+    'Petroleum': {
+        url: 'https://www.eia.gov/petroleum/supply/weekly/schedule.php',
+        description: 'Energy Information Administration - Weekly Petroleum Status Report Schedule'
+    },
+    'WASDE': {
+        url: 'https://www.usda.gov/about-usda/general-information/staff-offices/office-chief-economist/commodity-markets/wasde-report',
+        description: 'USDA - World Agricultural Supply and Demand Estimates'
+    }
+};
+
+function updateSourceDisplay(eventType) {
+    const sourceDiv = document.getElementById('source_display');
+    
+    if (eventType && sourceUrls[eventType]) {
+        const source = sourceUrls[eventType];
+        sourceDiv.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>Official Source:</strong><br>
+                    <small class="text-muted">${source.description}</small>
+                </div>
+                <a href="${source.url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-1"></i>Visit
+                </a>
+            </div>
+        `;
+        sourceDiv.className = 'alert alert-info';
+    } else {
+        sourceDiv.innerHTML = '<i class="fas fa-info-circle me-2"></i>Select an event type to see the official source';
+        sourceDiv.className = 'alert alert-info';
+    }
+}
+
+// Form validation
+document.getElementById('eventForm').addEventListener('submit', function(e) {
+    const eventType = document.getElementById('event_type').value;
+    const title = document.getElementById('title').value.trim();
+    const eventDate = document.getElementById('event_date').value;
+    
+    if (!eventType || !title || !eventDate) {
+        e.preventDefault();
+        alert('Please fill in all required fields (Event Type, Date, and Title).');
+        return false;
+    }
+    
+    // Add loading state to submit button
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating Event...';
+    submitBtn.disabled = true;
+    
+    // Re-enable if form submission fails
+    setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }, 5000);
+});
+
+// Initialize source display on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const currentEventType = document.getElementById('event_type').value;
+    if (currentEventType) {
+        updateSourceDisplay(currentEventType);
+    }
+    
+    // Add smooth animations
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '';
+        });
+    });
+});
+</script>
+{% endblock %}

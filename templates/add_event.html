@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-plus me-2 text-primary"></i>Add Economic Event
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="eventForm">
+                    <div class="row g-3">
+                        <!-- Event Type -->
+                        <div class="col-md-6">
+                            <label for="event_type" class="form-label">Event Type</label>
+                            <select class="form-select" id="event_type" name="event_type" required>
+                                <option value="">Select Event Type</option>
+                                <option value="FOMC">FOMC Meeting</option>
+                                <option value="NFP">Non-Farm Payroll (NFP)</option>
+                                <option value="Petroleum">Weekly Petroleum Report</option>
+                                <option value="WASDE">WASDE Report</option>
+                                <option value="Other">Other Economic Event</option>
+                            </select>
+                        </div>
+
+                        <!-- Event Date -->
+                        <div class="col-md-6">
+                            <label for="event_date" class="form-label">Event Date</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="event_date" 
+                                   name="event_date" 
+                                   value="{{ selected_date }}"
+                                   required>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="col-12">
+                            <label for="title" class="form-label">Event Title</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="title" 
+                                   name="title" 
+                                   placeholder="e.g., FOMC Rate Decision, NFP Release, etc."
+                                   required>
+                        </div>
+
+                        <!-- Importance Level -->
+                        <div class="col-md-6">
+                            <label for="importance" class="form-label">Importance Level</label>
+                            <select class="form-select" id="importance" name="importance" required>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                                <option value="Low">Low</option>
+                            </select>
+                            <div class="form-text">
+                                <small>
+                                    <span class="badge bg-danger me-1">High</span>Major market movers
+                                    <span class="badge bg-warning me-1 ms-2">Medium</span>Moderate impact
+                                    <span class="badge bg-success ms-2">Low</span>Minor impact
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Event Time (Optional) -->
+                        <div class="col-md-6">
+                            <label for="event_time" class="form-label">Event Time (Optional)</label>
+                            <input type="time" 
+                                   class="form-control" 
+                                   id="event_time" 
+                                   name="event_time">
+                            <div class="form-text">
+                                <small>Leave blank if time is not specified</small>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-12">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="3"
+                                      placeholder="Additional details about this event..."></textarea>
+                        </div>
+
+                        <!-- Source URL Display -->
+                        <div class="col-12">
+                            <label class="form-label">Official Source</label>
+                            <div id="source_display" class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Select an event type to see the official source
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('calendar_view') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Calendar
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" onclick="fillSampleData()">
+                                <i class="fas fa-magic me-2"></i>Fill Sample
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Add Event
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Templates -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-templates me-2"></i>Quick Templates
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-outline-warning btn-sm w-100" 
+                                onclick="fillTemplate('fomc')">
+                            <i class="fas fa-university me-1"></i>FOMC Meeting
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-outline-success btn-sm w-100" 
+                                onclick="fillTemplate('nfp')">
+                            <i class="fas fa-chart-line me-1"></i>NFP Report
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-outline-info btn-sm w-100" 
+                                onclick="fillTemplate('petroleum')">
+                            <i class="fas fa-oil-well me-1"></i>Petroleum Report
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm w-100" 
+                                onclick="fillTemplate('wasde')">
+                            <i class="fas fa-seedling me-1"></i>WASDE Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.source-display-box {
+    background: var(--glass-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+}
+
+.template-btn {
+    transition: all 0.3s ease;
+}
+
+.template-btn:hover {
+    transform: translateY(-1px);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 212, 170, 0.25);
+}
+</style>
+
+<script>
+// Event type change handler
+document.getElementById('event_type').addEventListener('change', function() {
+    updateSourceDisplay(this.value);
+    updateTitleSuggestion(this.value);
+});
+
+// Source URLs mapping
+const sourceUrls = {
+    'FOMC': {
+        url: 'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm',
+        description: 'Federal Reserve FOMC Calendar - Official meeting schedules and rate decisions'
+    },
+    'NFP': {
+        url: 'https://www.bls.gov/schedule/news_release/empsit.htm',
+        description: 'Bureau of Labor Statistics - Employment Situation Release Schedule'
+    },
+    'Petroleum': {
+        url: 'https://www.eia.gov/petroleum/supply/weekly/schedule.php',
+        description: 'Energy Information Administration - Weekly Petroleum Status Report Schedule'
+    },
+    'WASDE': {
+        url: 'https://www.usda.gov/about-usda/general-information/staff-offices/office-chief-economist/commodity-markets/wasde-report',
+        description: 'USDA - World Agricultural Supply and Demand Estimates'
+    }
+};
+
+function updateSourceDisplay(eventType) {
+    const sourceDiv = document.getElementById('source_display');
+    
+    if (eventType && sourceUrls[eventType]) {
+        const source = sourceUrls[eventType];
+        sourceDiv.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>Official Source:</strong><br>
+                    <small class="text-muted">${source.description}</small>
+                </div>
+                <a href="${source.url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-1"></i>Visit
+                </a>
+            </div>
+        `;
+        sourceDiv.className = 'alert alert-info';
+    } else {
+        sourceDiv.innerHTML = '<i class="fas fa-info-circle me-2"></i>Select an event type to see the official source';
+        sourceDiv.className = 'alert alert-info';
+    }
+}
+
+function updateTitleSuggestion(eventType) {
+    const titleInput = document.getElementById('title');
+    const today = new Date();
+    const month = today.toLocaleString('default', { month: 'long' });
+    const year = today.getFullYear();
+    
+    const suggestions = {
+        'FOMC': `FOMC Rate Decision - ${month} ${year}`,
+        'NFP': `Non-Farm Payroll Release - ${month} ${year}`,
+        'Petroleum': `Weekly Petroleum Status Report - ${today.toLocaleDateString()}`,
+        'WASDE': `WASDE Report - ${month} ${year}`
+    };
+    
+    if (suggestions[eventType] && !titleInput.value) {
+        titleInput.value = suggestions[eventType];
+    }
+}
+
+// Template functions
+function fillTemplate(type) {
+    const templates = {
+        fomc: {
+            event_type: 'FOMC',
+            title: 'FOMC Rate Decision - Federal Reserve Meeting',
+            importance: 'High',
+            description: 'Federal Open Market Committee meeting to decide on interest rates and monetary policy. Major impact on USD and all markets.'
+        },
+        nfp: {
+            event_type: 'NFP',
+            title: 'Non-Farm Payroll Employment Report',
+            importance: 'High',
+            description: 'Monthly employment data showing job creation/losses. Key indicator for economic health and Fed policy decisions.'
+        },
+        petroleum: {
+            event_type: 'Petroleum',
+            title: 'Weekly Petroleum Status Report',
+            importance: 'Medium',
+            description: 'Weekly inventory data for crude oil, gasoline, and distillates. Impacts energy markets and related currencies.'
+        },
+        wasde: {
+            event_type: 'WASDE',
+            title: 'World Agricultural Supply and Demand Estimates',
+            importance: 'Medium',
+            description: 'Monthly report on global crop production and supply/demand forecasts. Affects agricultural commodity prices.'
+        }
+    };
+    
+    const template = templates[type];
+    if (template) {
+        // Add smooth transition effect
+        const form = document.getElementById('eventForm');
+        form.style.opacity = '0.7';
+        form.style.transform = 'scale(0.98)';
+        
+        setTimeout(() => {
+            document.getElementById('event_type').value = template.event_type;
+            document.getElementById('title').value = template.title;
+            document.getElementById('importance').value = template.importance;
+            document.getElementById('description').value = template.description;
+            
+            // Trigger change event to update source display
+            document.getElementById('event_type').dispatchEvent(new Event('change'));
+            
+            // Smooth return animation
+            form.style.opacity = '1';
+            form.style.transform = 'scale(1)';
+        }, 200);
+    }
+}
+
+function fillSampleData() {
+    const today = new Date();
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+    
+    document.getElementById('event_type').value = 'FOMC';
+    document.getElementById('event_date').value = nextWeek.toISOString().split('T')[0];
+    document.getElementById('title').value = 'FOMC Rate Decision - Sample Event';
+    document.getElementById('importance').value = 'High';
+    document.getElementById('description').value = 'Sample economic event for testing purposes.';
+    
+    // Trigger change event
+    document.getElementById('event_type').dispatchEvent(new Event('change'));
+}
+
+// Form validation
+document.getElementById('eventForm').addEventListener('submit', function(e) {
+    const eventType = document.getElementById('event_type').value;
+    const title = document.getElementById('title').value.trim();
+    const eventDate = document.getElementById('event_date').value;
+    
+    if (!eventType || !title || !eventDate) {
+        e.preventDefault();
+        alert('Please fill in all required fields (Event Type, Date, and Title).');
+        return false;
+    }
+    
+    // Add loading state to submit button
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding Event...';
+    submitBtn.disabled = true;
+    
+    // Re-enable if form submission fails (shouldn't happen with proper validation)
+    setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }, 5000);
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default date to today if not provided
+    const dateInput = document.getElementById('event_date');
+    if (!dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // Add animations to template buttons
+    document.querySelectorAll('.template-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.classList.add('loading-shimmer');
+            setTimeout(() => {
+                this.classList.remove('loading-shimmer');
+            }, 300);
+        });
+    });
+});
+</script>
+{% endblock %}
