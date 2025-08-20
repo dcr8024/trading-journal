@@ -607,7 +607,7 @@ def calendar_view():
     trades_by_date = {}
     for trade in trades:
         trades_by_date[trade['date']] = {
-            'pnl': trade['daily_pnl'],
+            'pnl': round(trade['daily_pnl'], 2),  # Round to 2 decimal places
             'count': trade['trade_count']
         }
     
