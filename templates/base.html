@@ -321,6 +321,12 @@
             color: var(--danger);
         }
 
+        .alert-info {
+            background: rgba(0, 212, 170, 0.1);
+            border-left-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
         /* Modal */
         .modal-content {
             background: var(--bg-card);
@@ -390,6 +396,160 @@
             animation: shimmer 1.5s infinite;
         }
 
+        /* Calendar Specific Styles */
+        .calendar-container {
+            min-height: 600px;
+        }
+
+        .calendar-header {
+            background: var(--bg-tertiary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .calendar-day-header {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-right: 1px solid var(--border-color);
+            font-size: 0.875rem;
+        }
+
+        .calendar-day-header:last-child {
+            border-right: none;
+        }
+
+        .calendar-week {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .calendar-day {
+            min-height: 120px;
+            padding: 0.5rem;
+            border-right: 1px solid var(--border-color);
+            position: relative;
+            vertical-align: top;
+        }
+
+        .calendar-day:last-child {
+            border-right: none;
+        }
+
+        .calendar-day.other-month {
+            background: var(--bg-secondary);
+            opacity: 0.3;
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, rgba(0, 212, 170, 0.1), rgba(108, 92, 231, 0.1));
+            border: 2px solid var(--accent-primary);
+        }
+
+        .day-number {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        /* Event Styles */
+        .event-item {
+            background: var(--glass-bg);
+            border-radius: 6px;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-item:hover {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            transform: translateX(2px);
+        }
+
+        .event-item.fomc {
+            border-left-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .event-item.nfp {
+            border-left-color: var(--success);
+            background: rgba(0, 184, 148, 0.1);
+        }
+
+        .event-item.petroleum {
+            border-left-color: var(--accent-secondary);
+            background: rgba(108, 92, 231, 0.1);
+        }
+
+        .event-item.wasde {
+            border-left-color: var(--accent-primary);
+            background: rgba(0, 212, 170, 0.1);
+        }
+
+        .event-item.other {
+            border-left-color: var(--text-muted);
+            background: rgba(108, 117, 125, 0.1);
+        }
+
+        .event-title {
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .event-type {
+            font-size: 0.65rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        /* Importance levels */
+        .importance-high {
+            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
+        }
+
+        .importance-medium {
+            box-shadow: 0 0 0 1px rgba(255, 193, 7, 0.3);
+        }
+
+        .importance-low {
+            opacity: 0.8;
+        }
+
+        /* Trading P&L in calendar */
+        .trading-pnl {
+            background: var(--glass-bg);
+            border-radius: 6px;
+            padding: 0.25rem 0.5rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--border-color);
+        }
+
+        .trading-pnl .text-success {
+            border-left-color: var(--success) !important;
+        }
+
+        .trading-pnl .text-danger {
+            border-left-color: var(--danger) !important;
+        }
+
+        /* Add event button in calendar */
+        .add-event-btn {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.7rem;
+        }
+
+        .calendar-day:hover .add-event-btn {
+            opacity: 1;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .stats-metric h4 {
@@ -403,6 +563,29 @@
             
             .card-body {
                 padding: 1.5rem;
+            }
+
+            .calendar-day {
+                min-height: 80px;
+                padding: 0.25rem;
+            }
+            
+            .day-number {
+                font-size: 0.9rem;
+            }
+            
+            .event-item {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.3rem;
+            }
+            
+            .trading-pnl {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.3rem;
+            }
+            
+            .add-event-btn {
+                display: none;
             }
         }
     </style>
@@ -423,6 +606,9 @@
                     </a>
                     <a class="nav-link" href="{{ url_for('advanced_stats') }}">
                         <i class="fas fa-chart-bar me-1"></i>Advanced Stats
+                    </a>
+                    <a class="nav-link" href="{{ url_for('calendar_view') }}">
+                        <i class="fas fa-calendar-alt me-1"></i>Calendar
                     </a>
                     <a class="nav-link" href="{{ url_for('add_trade') }}">
                         <i class="fas fa-plus me-1"></i>Add Trade
