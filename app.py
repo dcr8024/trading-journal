@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from datetime import datetime
+from datetime import datetime, timedelta
 import sqlite3
 import os
 import secrets
 from werkzeug.utils import secure_filename
 from functools import wraps
+import calendar as cal
 
 app = Flask(__name__)
 
@@ -81,6 +82,22 @@ def init_db():
             account_pnl REAL NOT NULL,
             notes TEXT,
             screenshot_filename TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    # Economic events table (NEW)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS economic_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            event_type TEXT NOT NULL,
+            event_date DATE NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT,
+            importance TEXT DEFAULT 'Medium',
+            source_url TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
@@ -538,10 +555,188 @@ def advanced_stats():
                          all_users=all_users,
                          current_view_user_id=view_user_id)
 
+# NEW CALENDAR ROUTES
+
+@app.route('/calendar')
+@login_required
+def calendar_view():
+    # Get current month/year from query params or default to current
+    year = request.args.get('year', datetime.now().year, type=int)
+    month = request.args.get('month', datetime.now().month, type=int)
+    
+    # Handle month/year navigation
+    if month < 1:
+        month = 12
+        year -= 1
+    elif month > 12:
+        month = 1
+        year += 1
+    
+    conn = get_db_connection()
+    
+    # Get all economic events for the current month
+    events = conn.execute('''
+        SELECT * FROM economic_events 
+        WHERE user_id = ? AND strftime('%Y-%m', event_date) = ?
+        ORDER BY event_date ASC
+    ''', (session['user_id'], f"{year:04d}-{month:02d}")).fetchall()
+    
+    # Get trading days with P&L for the month
+    trades = conn.execute('''
+        SELECT date, SUM(account_pnl) as daily_pnl, COUNT(*) as trade_count
+        FROM trades 
+        WHERE user_id = ? AND strftime('%Y-%m', date) = ?
+        GROUP BY date
+        ORDER BY date ASC
+    ''', (session['user_id'], f"{year:04d}-{month:02d}")).fetchall()
+    
+    conn.close()
+    
+    # Create calendar data structure
+    month_calendar = cal.monthcalendar(year, month)
+    
+    # Convert events to dict by date for easy lookup
+    events_by_date = {}
+    for event in events:
+        event_date = event['event_date']
+        if event_date not in events_by_date:
+            events_by_date[event_date] = []
+        events_by_date[event_date].append(event)
+    
+    # Convert trades to dict by date for easy lookup
+    trades_by_date = {}
+    for trade in trades:
+        trades_by_date[trade['date']] = {
+            'pnl': trade['daily_pnl'],
+            'count': trade['trade_count']
+        }
+    
+    # Calculate navigation dates
+    prev_month = month - 1 if month > 1 else 12
+    prev_year = year if month > 1 else year - 1
+    next_month = month + 1 if month < 12 else 1
+    next_year = year if month < 12 else year + 1
+    
+    return render_template('calendar.html',
+                         calendar_data=month_calendar,
+                         current_year=year,
+                         current_month=month,
+                         month_name=cal.month_name[month],
+                         events_by_date=events_by_date,
+                         trades_by_date=trades_by_date,
+                         prev_month=prev_month,
+                         prev_year=prev_year,
+                         next_month=next_month,
+                         next_year=next_year,
+                         today=datetime.now().date())
+
+@app.route('/add_event', methods=['GET', 'POST'])
+@login_required
+def add_event():
+    if request.method == 'POST':
+        event_type = request.form['event_type']
+        event_date = request.form['event_date']
+        title = request.form['title'].strip()
+        description = request.form.get('description', '').strip()
+        importance = request.form['importance']
+        
+        # Get source URL based on event type
+        source_urls = {
+            'FOMC': 'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm',
+            'NFP': 'https://www.bls.gov/schedule/news_release/empsit.htm',
+            'WASDE': 'https://www.usda.gov/about-usda/general-information/staff-offices/office-chief-economist/commodity-markets/wasde-report',
+            'Petroleum': 'https://www.eia.gov/petroleum/supply/weekly/schedule.php',
+            'Other': ''
+        }
+        source_url = source_urls.get(event_type, '')
+        
+        # Validate required fields
+        if not all([event_type, event_date, title]):
+            flash('Event type, date, and title are required.', 'error')
+            return render_template('add_event.html')
+        
+        # Insert into database
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO economic_events (user_id, event_type, event_date, title, description, importance, source_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (session['user_id'], event_type, event_date, title, description, importance, source_url))
+        conn.commit()
+        conn.close()
+        
+        flash(f'Event "{title}" added successfully!', 'success')
+        return redirect(url_for('calendar_view'))
+    
+    # For GET request, get the date from query parameter if provided
+    selected_date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+    
+    return render_template('add_event.html', selected_date=selected_date)
+
+@app.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
+@login_required
+def edit_event(event_id):
+    conn = get_db_connection()
+    
+    if request.method == 'POST':
+        event_type = request.form['event_type']
+        event_date = request.form['event_date']
+        title = request.form['title'].strip()
+        description = request.form.get('description', '').strip()
+        importance = request.form['importance']
+        
+        # Get source URL based on event type
+        source_urls = {
+            'FOMC': 'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm',
+            'NFP': 'https://www.bls.gov/schedule/news_release/empsit.htm',
+            'WASDE': 'https://www.usda.gov/about-usda/general-information/staff-offices/office-chief-economist/commodity-markets/wasde-report',
+            'Petroleum': 'https://www.eia.gov/petroleum/supply/weekly/schedule.php',
+            'Other': ''
+        }
+        source_url = source_urls.get(event_type, '')
+        
+        conn.execute('''
+            UPDATE economic_events 
+            SET event_type=?, event_date=?, title=?, description=?, importance=?, source_url=?
+            WHERE id=? AND user_id=?
+        ''', (event_type, event_date, title, description, importance, source_url, event_id, session['user_id']))
+        conn.commit()
+        conn.close()
+        
+        flash('Event updated successfully!', 'success')
+        return redirect(url_for('calendar_view'))
+    
+    event = conn.execute('SELECT * FROM economic_events WHERE id = ? AND user_id = ?', (event_id, session['user_id'])).fetchone()
+    conn.close()
+    
+    if event is None:
+        flash('Event not found or access denied.', 'error')
+        return redirect(url_for('calendar_view'))
+    
+    return render_template('edit_event.html', event=event)
+
+@app.route('/delete_event/<int:event_id>')
+@login_required
+def delete_event(event_id):
+    conn = get_db_connection()
+    
+    # Verify ownership before deleting
+    event = conn.execute('SELECT title FROM economic_events WHERE id = ? AND user_id = ?', (event_id, session['user_id'])).fetchone()
+    
+    if not event:
+        flash('Event not found or access denied.', 'error')
+        return redirect(url_for('calendar_view'))
+    
+    conn.execute('DELETE FROM economic_events WHERE id = ? AND user_id = ?', (event_id, session['user_id']))
+    conn.commit()
+    conn.close()
+    
+    flash(f'Event "{event["title"]}" deleted successfully!', 'success')
+    return redirect(url_for('calendar_view'))
+
 if __name__ == '__main__':
     init_db()
     print(f"Starting Trading Journal App...")
     print(f"Upload folder: {UPLOAD_FOLDER}")
+    # For Railway deployment, use PORT from environment
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port, 
-            ssl_context=('cert.pem', 'key.pem'))
+    app.run(debug=False, host='0.0.0.0', port=port)
