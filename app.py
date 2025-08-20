@@ -665,7 +665,10 @@ def add_event():
         conn.close()
         
         flash(f'Event "{title}" added successfully!', 'success')
-        return redirect(url_for('calendar_view'))
+        
+        # Extract year and month from event_date to redirect to correct month
+        event_datetime = datetime.strptime(event_date, '%Y-%m-%d')
+        return redirect(url_for('calendar_view', year=event_datetime.year, month=event_datetime.month))
     
     # For GET request, get the date from query parameter if provided
     selected_date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
@@ -703,7 +706,10 @@ def edit_event(event_id):
         conn.close()
         
         flash('Event updated successfully!', 'success')
-        return redirect(url_for('calendar_view'))
+        
+        # Extract year and month from event_date to redirect to correct month
+        event_datetime = datetime.strptime(event_date, '%Y-%m-%d')
+        return redirect(url_for('calendar_view', year=event_datetime.year, month=event_datetime.month))
     
     event = conn.execute('SELECT * FROM economic_events WHERE id = ? AND user_id = ?', (event_id, session['user_id'])).fetchone()
     conn.close()
@@ -719,19 +725,22 @@ def edit_event(event_id):
 def delete_event(event_id):
     conn = get_db_connection()
     
-    # Verify ownership before deleting
-    event = conn.execute('SELECT title FROM economic_events WHERE id = ? AND user_id = ?', (event_id, session['user_id'])).fetchone()
+    # Get event details before deleting to extract the date for redirect
+    event = conn.execute('SELECT title, event_date FROM economic_events WHERE id = ? AND user_id = ?', (event_id, session['user_id'])).fetchone()
     
     if not event:
         flash('Event not found or access denied.', 'error')
         return redirect(url_for('calendar_view'))
+    
+    # Extract year and month from event_date for redirect
+    event_datetime = datetime.strptime(event['event_date'], '%Y-%m-%d')
     
     conn.execute('DELETE FROM economic_events WHERE id = ? AND user_id = ?', (event_id, session['user_id']))
     conn.commit()
     conn.close()
     
     flash(f'Event "{event["title"]}" deleted successfully!', 'success')
-    return redirect(url_for('calendar_view'))
+    return redirect(url_for('calendar_view', year=event_datetime.year, month=event_datetime.month))
 
 if __name__ == '__main__':
     init_db()
